@@ -6,10 +6,8 @@ import (
 )
 
 func main() {
-
-	err := app.StartAntifaud()
+	err := app.StartAntifraud()
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 }

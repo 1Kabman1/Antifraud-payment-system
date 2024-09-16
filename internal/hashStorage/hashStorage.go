@@ -5,6 +5,10 @@ import (
 	"strconv"
 )
 
+const (
+	count string = "count"
+)
+
 type Storage struct {
 	rules     map[int]*Rule
 	counter   map[[16]byte]*Counter
@@ -46,7 +50,7 @@ func (s *Storage) Rule(id int) (error, *Rule) {
 		r := s.rules[id]
 		return nil, r
 	}
-	return errors.New("Key is not correct"), &Rule{}
+	return errors.New(" A Key is not correct"), &Rule{}
 }
 
 // HasRule - return bool
@@ -55,7 +59,7 @@ func (s *Storage) HasRule(id int) bool {
 	return ok
 }
 
-// HasCounter - Checks if there is a value in the map
+// HasCounter - Checks if there is a Value in the map
 func (s *Storage) HasCounter(key [16]byte) bool {
 	_, ok := s.counter[key]
 	return ok
@@ -63,11 +67,28 @@ func (s *Storage) HasCounter(key [16]byte) bool {
 
 // SetCounter - sets id for c
 func (s *Storage) SetCounter(key [16]byte, idRule int) {
-	aNewCounter := NewCounter()
-	idCounter := s.CounterLen() + 1
-	aNewCounter.id = idCounter
-	s.counter[key] = &aNewCounter
-	s.AddToArchivist(idRule, idCounter)
+	if !s.HasCounter(key) {
+		err, aRule := s.Rule(idRule)
+		if err != nil {
+			return
+		}
+		aNewCounter := NewCounter(aRule.TimePeriod, aRule.ExpirationTime) //
+		idCounter := s.CounterLen() + 1
+		aNewCounter.id = idCounter
+		s.counter[key] = &aNewCounter
+		s.AddToArchivist(idRule, idCounter)
+	}
+}
+
+// IncreaseValue - Increases Value in counter
+func (s *Storage) FixingThePayment(key [16]byte, AggregateValue string,
+	aAmount float64) {
+	_, c := s.Counter(key)
+	if AggregateValue == count {
+		c.IncreasingTheCounterValue(1)
+	} else {
+		c.IncreasingTheCounterValue(int(aAmount))
+	}
 }
 
 // Counter - return Counter
@@ -77,7 +98,7 @@ func (s *Storage) Counter(key [16]byte) (error, *Counter) {
 		c := s.counter[key]
 		return nil, c
 	}
-	return errors.New("Key is not correct"), &Counter{}
+	return errors.New("A Key is not correct"), &Counter{}
 }
 
 // CounterLen - return len
